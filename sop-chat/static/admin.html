@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wonder SOPs — Admin</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body { overflow: hidden; }
+  header { padding: 12px 20px; }
+  .logo-wordmark { font-size: 22px; }
+  .logo-sub { font-size: 10px; }
+
+  /* ── Two-column layout ── */
+  .main-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    overflow: hidden;
+  }
+
+  /* ── Left panel ── */
+  .left-panel {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .overview {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .overview-count {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .overview-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .overview-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .btn-add-sop {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+
+  .btn-add-sop:hover { background: var(--green-hover); }
+
+  /* SOP list */
+  .sop-list-header {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .sop-list-header h3 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-search {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .sidebar-search:focus { border-color: var(--accent); }
+
+  .sop-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .sop-item {
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-left: 3px solid transparent;
+  }
+
+  .sop-item:hover { background: var(--surface2); }
+
+  .sop-item.active {
+    background: var(--surface2);
+    border-left-color: var(--accent);
+  }
+
+  .sop-item .sop-id {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .sop-item .sop-title {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sop-count {
+    padding: 8px 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* ── Chat panel ── */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chat-welcome {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+
+  .chat-welcome h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+
+  .chat-welcome p { font-size: 13px; max-width: 420px; margin: 0 auto; line-height: 1.6; }
+
+  /* ── Pinned SOP ── */
+  .pinned-bar {
+    padding: 8px 24px 0;
+    flex-shrink: 0;
+  }
+
+  .pinned-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--source-bg);
+    border: 1px solid var(--accent);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .pinned-chip .pin-id { font-weight: 700; }
+  .pinned-chip .pin-label { color: var(--text-dim); font-size: 11px; }
+
+  .pin-close {
+    background: none; border: none;
+    color: var(--text-dim); cursor: pointer; font-size: 15px; line-height: 1;
+    padding: 0 2px; margin-left: 4px;
+  }
+
+  .pin-close:hover { color: var(--red); }
+
+  .btn-archive {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 3px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-archive:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* ── Proposal card ── */
+  #proposal-card {
+    display: none;
+    margin: 8px 24px 0;
+    background: var(--surface);
+    border: 2px solid var(--green);
+    border-radius: 10px;
+    padding: 14px 16px;
+    flex-shrink: 0;
+  }
+
+  #proposal-card.visible { display: block; }
+
+  .proposal-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .proposal-card-header h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    flex: 1;
+  }
+
+  .proposal-sop-id {
+    font-size: 11px;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .proposal-conflicts {
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .proposal-conflicts.visible { display: block; }
+  .proposal-conflicts strong { color: #d68910; }
+
+  .proposal-actions { display: flex; gap: 10px; }
+
+  .btn-publish {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+
+  .btn-publish:hover { background: var(--green-hover); }
+  .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-cancel-proposal {
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel-proposal:hover { background: var(--border); color: var(--text); }
+
+  .proposal-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eafaf1;
+    border: 1px solid #27ae60;
+    color: #1e8449;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-wordmark">wonder</div>
+    <div class="logo-sub">SOP Admin</div>
+  </div>
+  <div class="header-actions">
+    <a href="/" class="btn">Back to Chat</a>
+    <button class="btn" onclick="clearChat()">New Chat</button>
+  </div>
+</header>
+
+<div class="main-layout">
+
+  <!-- Left panel -->
+  <div class="left-panel">
+    <div class="overview">
+      <div class="overview-count" id="overview-count">&mdash;</div>
+      <div class="overview-label">SOPs</div>
+      <div class="overview-hint">Click on an SOP to ask, edit, or change.</div>
+      <button class="btn-add-sop" onclick="startNewSOP()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add New SOP
+      </button>
+    </div>
+
+    <div class="sop-list-header">
+      <h3>All SOPs</h3>
+      <input type="text" class="sidebar-search" id="sidebar-search" placeholder="Filter SOPs..." oninput="filterSidebar()">
+    </div>
+    <div class="sop-list" id="sop-list"></div>
+    <div class="sop-count" id="sop-count"></div>
+  </div>
+
+  <!-- Chat panel -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-welcome" id="chat-welcome">
+        <h2>Admin Chat</h2>
+        <p>Select an SOP from the sidebar to ask questions, request edits, or create new SOPs.</p>
+      </div>
+    </div>
+
+    <!-- Pinned SOP indicator -->
+    <div class="pinned-bar" id="pinned-bar" style="display:none;">
+      <div class="pinned-chip">
+        <span class="pin-id" id="pinned-id"></span>
+        <span class="pin-label" id="pinned-label"></span>
+        <button class="pin-close" onclick="unpinSOP()" title="Unpin">&times;</button>
+        <button class="btn-archive" onclick="archiveSOP()" title="Move to archive">Archive</button>
+      </div>
+    </div>
+
+    <!-- Proposal card -->
+    <div id="proposal-card">
+      <div class="proposal-card-header">
+        <h4>Proposed Changes</h4>
+        <span class="proposal-sop-id" id="proposal-sop-label"></span>
+      </div>
+      <div class="proposal-conflicts" id="proposal-conflicts"></div>
+      <div class="proposal-actions">
+        <button class="btn-publish" id="btn-publish" onclick="publishChanges()">Publish Changes</button>
+        <button class="btn-cancel-proposal" onclick="cancelProposal()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea id="chat-input" class="chat-textarea" placeholder="Ask about an SOP, or request a change..." rows="1"></textarea>
+        <button id="chat-mic-btn" class="mic-btn" title="Voice input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button id="chat-send-btn" class="send-btn" onclick="sendChatMessage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/admin.js"></script>
+</body>
+</html>
